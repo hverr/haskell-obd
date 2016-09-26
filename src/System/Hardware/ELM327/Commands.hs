@@ -1,9 +1,11 @@
 {-# LANGUAGE GADTs #-}
 module System.Hardware.ELM327.Commands where
 
+import Control.Lens (Prism', prism', re, (^.), (^?))
 import Data.Bits (shiftR, (.&.))
 import Data.Word
-import Control.Lens (Prism', prism', re, (^.), (^?))
+import Numeric (readHex)
+import Text.Printf (printf)
 
 -- | An AT command, to configure the ELM327.
 data AT = ATDescribeProtocolNumber
@@ -37,6 +39,7 @@ at = prism' conv mConv
 --
 -- Every OBD command can be one of several modes.
 data OBD = CurrentData CurrentData
+         deriving (Eq, Show)
 
 -- | A prism between 'OBD' and 'Word16'
 obdWord16 :: Prism' Word16 OBD
@@ -50,6 +53,14 @@ obdWord16 = prism' conv mConv
     mode x = shiftR x 8 .&. 0xFF
     pid x = fromIntegral $ x .&. 0xFF
 
+-- | A prism between 'OBD' and 'String'
+obd :: Prism' String OBD
+obd = prism' conv mConv
+  where
+    conv x = printf "%04X" (x ^. re obdWord16)
+    mConv s | [(x, "")] <- readHex s = x ^? obdWord16
+            | otherwise = Nothing
+
 -- | An OBD command requesting current vehicle data (mode 0x01).
 data CurrentData = OBDEngineCoolantTemperature
                  | OBDEngineRPM
@@ -58,6 +69,7 @@ data CurrentData = OBDEngineCoolantTemperature
                  | OBDSupported01PIDs
                  | OBDThrottlePosition
                  | OBDVehicleSpeed
+                 deriving (Eq, Show)
 
 -- | A prism between 'Word8' and 'CurrentData'.
 currentData :: Prism' Word8 CurrentData
