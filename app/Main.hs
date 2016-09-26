@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import System.Hardware.ELM327 ()
 
 main :: IO ()
-main = someFunc
+main = putStrLn "Hello World!"
