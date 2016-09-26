@@ -18,6 +18,7 @@ library
   exposed-modules:     System.Hardware.ELM327
                      , System.Hardware.ELM327.Commands
   build-depends:       base >= 4.7 && < 5
+                     , bytestring >= 0.10.6 && < 0.11
                      , lens >= 4.13 && < 4.14
                      , serialport >= 0.4.7 && < 0.5
   ghc-options:         -Wall -Werror

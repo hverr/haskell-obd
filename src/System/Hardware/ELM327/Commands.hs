@@ -3,9 +3,24 @@ module System.Hardware.ELM327.Commands where
 
 import Control.Lens (Prism', prism', re, (^.), (^?))
 import Data.Bits (shiftR, (.&.))
-import Data.Word
+import Data.Word (Word8, Word16)
 import Numeric (readHex)
 import Text.Printf (printf)
+
+-- | A generic command, that can be sent to an ELM327.
+data Command = AT AT
+             | OBD OBD
+             deriving (Eq, Show)
+
+-- | A prism between 'String' and 'Command'
+command :: Prism' String Command
+command = prism' conv mConv
+  where
+    conv (AT x) = "AT" ++ x ^. re at
+    conv (OBD x) = x ^. re obd
+
+    mConv ('A':'T':xs) = AT <$> xs ^? at
+    mConv xs = OBD <$> xs ^? obd
 
 -- | An AT command, to configure the ELM327.
 data AT = ATDescribeProtocolNumber
