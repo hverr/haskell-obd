@@ -1,8 +1,12 @@
 module System.Hardware.ELM327 where
 
 import Control.Monad (when)
-import Control.Lens (re, (^.))
+import Control.Lens (re, (^.), (^?))
 import Data.ByteString.Char8 (ByteString)
+import Data.Char (isHexDigit)
+import Data.List (stripPrefix)
+import Data.Maybe (fromMaybe)
+import Data.Word (Word8)
 import qualified Data.ByteString.Char8 as Char8
 
 import System.Hardware.Serialport (CommSpeed(..),
@@ -15,7 +19,12 @@ import System.Hardware.Serialport (CommSpeed(..),
                                    openSerial)
 import qualified System.Hardware.Serialport as Port
 
-import System.Hardware.ELM327.Commands (AT, Command(..), command)
+import System.Hardware.ELM327.Commands (AT, Command(..), OBD, command)
+import System.Hardware.ELM327.Errors (OBDError(..),
+                                      OBDDecodeError(..),
+                                      obdErrorMessage)
+import System.Hardware.ELM327.Utils.Hex (hexToBytes)
+import System.Hardware.ELM327.Utils.Monad (maybeToLeft, maybeToRight)
 
 -- | An established connection to an ELM327 device.
 newtype Con = Con SerialPort
@@ -74,3 +83,21 @@ flush (Con port) = Port.flush port
 -- | Send an 'AT' command and expect a response.
 at :: Con -> AT -> IO (Maybe ByteString)
 at con cmd = send con (AT cmd) >> recv con
+
+-- | Send an 'OBD' comand and expect a response.
+obd :: Con -> OBD -> IO (Either OBDError [Word8])
+obd con cmd = do
+    send con (OBD cmd)
+    mbs <- recv con
+    case mbs of
+        Nothing -> return $ Left (OBDDecodeError EmptyResponseError)
+        Just bs -> return . decode $ Char8.unpack bs
+  where
+    decode bs = Right (removeStatusPrefixes bs)
+                >>= \x -> maybeToLeft x (OBDErrorMessage <$> x ^? obdErrorMessage)
+                >>= Right . filter isHexDigit
+                >>= maybeToRight (OBDDecodeError NotEnoughBytesError) . hexToBytes
+
+    statusPrefixes = ["SEARCHING..."]
+    removeStatusPrefixes x = foldl stripPrefix' x statusPrefixes
+    stripPrefix' x pref = fromMaybe x (stripPrefix pref x)
