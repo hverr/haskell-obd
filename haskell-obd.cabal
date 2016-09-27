@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     System.Hardware.ELM327
                      , System.Hardware.ELM327.Commands
+                     , System.Hardware.ELM327.Errors
   build-depends:       base >= 4.7 && < 5
                      , bytestring >= 0.10.6 && < 0.11
                      , lens >= 4.13 && < 4.14
