@@ -52,6 +52,21 @@ sendBytes con@(Con port) x = do
 sendString :: Con -> String -> IO ()
 sendString con = sendBytes con . Char8.pack
 
+-- | Receive an ELM327 response as a byte string.
+recv :: Con -> IO (Maybe ByteString)
+recv (Con port) = recv' []
+  where
+    recv' xs = do
+        bs <- Port.recv port 1
+        case Char8.unpack bs of
+            [] -> recv' xs
+            ['\r'] -> recv' xs
+            ['\0'] -> recv' xs
+            ['>'] -> return $ ret xs
+            x:_ -> recv' (x:xs)
+    ret [] = Nothing
+    ret xs = Just . Char8.pack . reverse $ xs
+
 -- | Flush the serial connection
 flush :: Con -> IO ()
 flush (Con port) = Port.flush port
