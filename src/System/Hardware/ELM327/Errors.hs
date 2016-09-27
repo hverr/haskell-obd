@@ -1,3 +1,4 @@
+-- | A collection of error types.
 module System.Hardware.ELM327.Errors where
 
 import Control.Lens (Prism', prism')

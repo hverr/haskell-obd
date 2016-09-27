@@ -1,3 +1,4 @@
+-- | Collection of functions to deal with hexadecimal encoding.
 module System.Hardware.ELM327.Utils.Hex where
 
 import Data.List.Split (chunksOf)

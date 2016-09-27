@@ -1,3 +1,4 @@
+-- | Basic interface for communication with the ELM327.
 module System.Hardware.ELM327 where
 
 import Control.Monad (when)

@@ -1,3 +1,4 @@
+-- | Collection of helper functions to deal with monads.
 module System.Hardware.ELM327.Utils.Monad where
 
 -- | Convert 'Maybe a' to 'Either a b'.
