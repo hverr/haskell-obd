@@ -15,7 +15,7 @@ import System.Hardware.Serialport (CommSpeed(..),
                                    openSerial)
 import qualified System.Hardware.Serialport as Port
 
-import System.Hardware.ELM327.Commands (Command, command)
+import System.Hardware.ELM327.Commands (AT, Command(..), command)
 
 -- | An established connection to an ELM327 device.
 newtype Con = Con SerialPort
@@ -70,3 +70,7 @@ recv (Con port) = recv' []
 -- | Flush the serial connection
 flush :: Con -> IO ()
 flush (Con port) = Port.flush port
+
+-- | Send an 'AT' command and expect a response.
+at :: Con -> AT -> IO (Maybe ByteString)
+at con cmd = send con (AT cmd) >> recv con
