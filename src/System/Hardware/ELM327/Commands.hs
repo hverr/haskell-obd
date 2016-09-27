@@ -57,17 +57,30 @@ at = prism' conv mConv
 data OBD = CurrentData CurrentData
          deriving (Eq, Show)
 
+-- | Return the mode of an 'OBD' command.
+obdMode :: OBD -> Word8
+obdMode cmd = word16Mode $ cmd ^. re obdWord16
+
+-- | Return the PID of an 'OBD' command.
+obdPID :: OBD -> Word8
+obdPID cmd = word16PID $ cmd ^. re obdWord16
+
+-- | Return the mode of an 'OBD' command represented as a 'Word16'.
+word16Mode :: Word16 -> Word8
+word16Mode x = fromIntegral $ shiftR x 8 .&. 0xFF
+
+-- | Return the PID of an 'OBD' command represented as a 'Word16'.
+word16PID :: Word16 -> Word8
+word16PID x = fromIntegral $ x .&. 0xFF
+
 -- | A prism between 'OBD' and 'Word16'
 obdWord16 :: Prism' Word16 OBD
 obdWord16 = prism' conv mConv
   where
     conv (CurrentData x) = 0x0100 .&. fromIntegral (x ^. re currentData)
 
-    mConv x | mode x == 0x01 = CurrentData <$> pid x ^? currentData
+    mConv x | word16Mode x == 0x01 = CurrentData <$> word16PID x ^? currentData
             | otherwise = Nothing
-
-    mode x = shiftR x 8 .&. 0xFF
-    pid x = fromIntegral $ x .&. 0xFF
 
 -- | A prism between 'OBD' and 'String'
 obd :: Prism' String OBD

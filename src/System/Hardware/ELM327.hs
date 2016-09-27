@@ -20,7 +20,12 @@ import System.Hardware.Serialport (CommSpeed(..),
                                    openSerial)
 import qualified System.Hardware.Serialport as Port
 
-import System.Hardware.ELM327.Commands (AT, Command(..), OBD, command)
+import System.Hardware.ELM327.Commands (AT,
+                                        Command(..),
+                                        OBD,
+                                        command,
+                                        obdMode,
+                                        obdPID)
 import System.Hardware.ELM327.Errors (OBDError(..),
                                       OBDDecodeError(..),
                                       obdErrorMessage)
@@ -98,7 +103,9 @@ obd con cmd = do
                 >>= \x -> maybeToLeft x (OBDErrorMessage <$> x ^? obdErrorMessage)
                 >>= Right . filter isHexDigit
                 >>= maybeToRight (OBDDecodeError NotEnoughBytesError) . hexToBytes
+                >>= maybeToRight (OBDDecodeError NoResponseHeaderError) . stripHeader
 
     statusPrefixes = ["SEARCHING..."]
     removeStatusPrefixes x = foldl stripPrefix' x statusPrefixes
     stripPrefix' x pref = fromMaybe x (stripPrefix pref x)
+    stripHeader = stripPrefix [40 + obdMode cmd, obdPID cmd]
