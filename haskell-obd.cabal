@@ -18,6 +18,9 @@ library
   exposed-modules:     System.Hardware.ELM327
                      , System.Hardware.ELM327.Commands
                      , System.Hardware.ELM327.Errors
+                     , System.Hardware.ELM327.Simulator
+                     , System.Hardware.ELM327.Simulator.OBDBus
+                     , System.Hardware.ELM327.Simulator.OBDBus.VWPolo2007
   other-modules:       System.Hardware.ELM327.Utils.Hex
                      , System.Hardware.ELM327.Utils.Monad
   build-depends:       base >= 4.7 && < 5
