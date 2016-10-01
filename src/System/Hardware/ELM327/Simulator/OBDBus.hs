@@ -10,4 +10,4 @@ import System.Hardware.ELM327.Commands (Protocol)
 -- | An underlying bus that is supported by the ELM327 'Simulator'.
 class OBDBus bus where
     protocol :: bus -> Protocol
-    request :: OBDBus bus => [Word8] -> State bus (Maybe [Word8])
+    request :: [Word8] -> State bus (Maybe [Word8])
