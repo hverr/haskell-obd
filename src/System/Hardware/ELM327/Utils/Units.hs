@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE GADTs #-}
 -- | Helper functions to work with dimensions.
 module System.Hardware.ELM327.Utils.Units where
 
