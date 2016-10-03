@@ -108,4 +108,4 @@ obd con cmd = do
     statusPrefixes = ["SEARCHING..."]
     removeStatusPrefixes x = foldl stripPrefix' x statusPrefixes
     stripPrefix' x pref = fromMaybe x (stripPrefix pref x)
-    stripHeader = stripPrefix [40 + obdMode cmd, obdPID cmd]
+    stripHeader = stripPrefix [0x40 + obdMode cmd, obdPID cmd]
