@@ -57,7 +57,7 @@ throttlePosition = iso conv mConv
   where conv = (^. doubleOneByte) . (P.* 255)
         mConv = (P./ 255) . (^. re doubleOneByte)
 
--- | Convert throttle position
+-- | Convert vehicle speed
 vehicleSpeed :: Iso' (Velocity Double) OneByte
 vehicleSpeed = iso conv mConv
   where conv = (^. doubleOneByte) . (/~ (kilo meter / second))
