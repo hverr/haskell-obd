@@ -13,4 +13,4 @@ import Numeric.Units.Dimensional.UnitNames (atom)
 
 -- | Declare rounds per minute
 rpm :: Fractional a => Unit 'NonMetric DFrequency a
-rpm = mkUnitQ (atom "m" "m" "min") (1 % 60) hertz
+rpm = mkUnitQ (atom "rpm" "rpm" "rpm") (1 % 60) hertz
