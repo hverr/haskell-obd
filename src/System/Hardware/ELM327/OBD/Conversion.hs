@@ -16,8 +16,16 @@ import System.Hardware.ELM327.Utils.Units (rpm)
 -- | Type alias for a tuple of two bytes.
 type TwoBytes = (Word8, Word8)
 
+-- | Convert 'TwoBytes' to a byte array
+twoBytes :: TwoBytes -> [Word8]
+twoBytes (a, b) = [a, b]
+
 -- | Type alias for one byte
 type OneByte = Word8
+
+-- | Convert 'OneByte' to a byte array
+oneByte :: OneByte -> [Word8]
+oneByte x = [x]
 
 -- | Convert engine coolant temperature.
 engineCoolantTemperature :: Iso' (CelsiusTemperature Double) OneByte
