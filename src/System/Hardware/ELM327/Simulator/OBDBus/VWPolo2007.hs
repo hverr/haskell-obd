@@ -26,6 +26,7 @@ data VWPolo2007Bus = Bus { _engineCoolantTemperature :: CelsiusTemperature Doubl
 supported01PIDs :: [Word8]
 supported01PIDs = [0xBE, 0x3E, 0xB8, 0x11]
 
+-- | The 'VWPolo2007Bus' is an instance of 'OBDBus'.
 instance OBDBus VWPolo2007Bus where
     protocol _ = ISO_14230_4_KWP
     request (CurrentData x) = reqCD x
