@@ -21,6 +21,7 @@ data VWPolo2007Bus = Bus { _engineCoolantTemperature :: CelsiusTemperature Doubl
                          , _massAirFlowRate :: MassFlow Double
                          , _throttlePosition :: Double
                          , _vehicleSpeed :: Velocity Double }
+                         deriving (Show)
 
 -- | Supported mode 0x01 PIDs of the bus
 supported01PIDs :: [Word8]

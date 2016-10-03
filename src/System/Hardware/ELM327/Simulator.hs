@@ -20,7 +20,7 @@ module System.Hardware.ELM327.Simulator (
 
 import Control.Lens (Lens', lens, (^.), (^?), (.~), re)
 import Control.Monad.State (State, runState, get, put)
-import Data.Char (toUpper)
+import Data.Char (isHexDigit, toUpper)
 import Text.Printf (printf)
 
 import Numeric.Units.Dimensional.Prelude (ElectricPotential, volt, (*~), (/~))
@@ -39,6 +39,7 @@ data Simulator bus = Simulator { _obdBus :: bus
                                , _echo :: Echo
                                , _pin2Voltage :: ElectricPotential Double
                                , _versionID :: String }
+                               deriving (Show)
 
 -- | The default simulator, initialized with a given protocol
 defaultSimulator :: OBDBus bus => bus -> Simulator bus
@@ -49,14 +50,28 @@ defaultSimulator b = Simulator { _obdBus = b
                                , _pin2Voltage = 12.3 *~ volt
                                , _versionID = "ELM327 v2.1" }
 
+-- | Private data declaration that represents a parsed command (used in 'handle')
+data ParsedCommand = InvalidCommand
+                   | KnownCommand Command
+                   | UnknownOBD String
+
+-- | Parse a command from a serial line
+parsedCommand :: String -> ParsedCommand
+parsedCommand = parsedCommand' . map toUpper . filter (/= ' ')
+  where
+    parsedCommand' c@('A':'T':_) = maybe InvalidCommand KnownCommand (c ^? command)
+    parsedCommand' c | all isHexDigit c = maybe (UnknownOBD c) KnownCommand (c ^? command)
+                     | otherwise        = InvalidCommand
+
 -- | Make the simulator handle a command.
 handle :: OBDBus bus => String -> State (Simulator bus) String
-handle cmd = maybe (return "?") handle' $ sanitize cmd
+handle cmd = handle' $ parsedCommand cmd
   where
-    sanitize = (^? command) . map toUpper . filter (/= ' ')
-
-    handle' :: OBDBus bus => Command -> State (Simulator bus) String
-    handle' (OBD x) = do
+    handle' :: OBDBus bus => ParsedCommand -> State (Simulator bus) String
+    handle' InvalidCommand = return "?"
+    handle' (UnknownOBD _) = reply . either id (++ "NO DATA") <$> connectToBus
+    handle' (KnownCommand x) = handle'' x
+    handle'' (OBD x) = do
         connectStatus <- connectToBus
         case connectStatus of
             Left errMsg -> return $ reply errMsg
@@ -67,12 +82,12 @@ handle cmd = maybe (return "?") handle' $ sanitize cmd
                 case resp of
                     Nothing -> return . reply $ conMsg ++ "NO DATA"
                     Just v -> return . reply . (conMsg ++) . bytesToHex " " $ [obdMode x + 0x40, obdPID x] ++ v
-    handle' (AT ATDescribeProtocolNumber) = reply <$> describeProtocolNumber
-    handle' (AT ATEchoOff) = reply <$> echoOff
-    handle' (AT ATReadVoltage) = reply <$> readVoltage
-    handle' (AT ATResetAll) = reply <$> resetAll
-    handle' (AT (ATSelectProtocol p)) = reply <$> selectProtocol p
-    handle' (AT ATVersionID) = reply . (^. versionID) <$> get
+    handle'' (AT ATDescribeProtocolNumber) = reply <$> describeProtocolNumber
+    handle'' (AT ATEchoOff) = reply <$> echoOff
+    handle'' (AT ATReadVoltage) = reply <$> readVoltage
+    handle'' (AT ATResetAll) = reply <$> resetAll
+    handle'' (AT (ATSelectProtocol p)) = reply <$> selectProtocol p
+    handle'' (AT ATVersionID) = reply . (^. versionID) <$> get
 
     reply = (++ "\r>")
 
