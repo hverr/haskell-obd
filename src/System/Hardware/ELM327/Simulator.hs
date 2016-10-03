@@ -57,12 +57,16 @@ handle cmd = maybe (return "?") handle' $ sanitize cmd
 
     handle' :: OBDBus bus => Command -> State (Simulator bus) String
     handle' (OBD x) = do
-        bus <- (^. obdBus) <$> get
-        let (resp, bus') = runState (OBDBus.request x) bus
-        (obdBus .~ bus') <$> get >>= put
-        case resp of
-            Nothing -> return $ reply "NO DATA"
-            Just v -> return . reply . bytesToHex " " $ [obdMode x + 0x40, obdPID x] ++ v
+        connectStatus <- connectToBus
+        case connectStatus of
+            Left errMsg -> return $ reply errMsg
+            Right conMsg -> do
+                bus <- (^. obdBus) <$> get
+                let (resp, bus') = runState (OBDBus.request x) bus
+                (obdBus .~ bus') <$> get >>= put
+                case resp of
+                    Nothing -> return . reply $ conMsg ++ "NO DATA"
+                    Just v -> return . reply . (conMsg ++) . bytesToHex " " $ [obdMode x + 0x40, obdPID x] ++ v
     handle' (AT ATDescribeProtocolNumber) = reply <$> describeProtocolNumber
     handle' (AT ATEchoOff) = reply <$> echoOff
     handle' (AT ATReadVoltage) = reply <$> readVoltage
@@ -108,6 +112,22 @@ versionID = lens _versionID $ \s x -> s { _versionID = x }
 -- | If the command is just a setting change, the ELM327 will reply with OK.
 replyOK :: State (Simulator bus) String
 replyOK = return "OK"
+
+-- | Connect to the underlying bus
+--
+-- If the connection fails, the result will be 'Left errorMessage', otherwise
+-- the result will be 'Right statusMessage'.
+connectToBus :: OBDBus bus => State (Simulator bus) (Either String String)
+connectToBus = do
+    bus    <- OBDBus.protocol . (^. obdBus) <$> get
+    chosen <- (^. chosenProtocol) <$> get
+    case chosen of
+        AutomaticProtocol -> do (connectedProtocol .~ AutomaticallyChosen bus) <$> get >>= put
+                                return $ Right "SEARCHING..."
+        _ -> if bus /= chosen
+                then return $ Left "UNABLE TO CONNECT"
+                else do (connectedProtocol .~ ManuallyChosen bus) <$> get >>= put
+                        return $ Right ""
 
 -- | Describe the protocol number
 describeProtocolNumber :: State (Simulator bus) String
