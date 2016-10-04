@@ -5,6 +5,7 @@ module System.Hardware.ELM327.Simulator (
 , defaultSimulator
 
   -- * Interacting with the simulator
+, connect
 , handle
 
   -- * Attributes of the simulator
@@ -18,16 +19,26 @@ module System.Hardware.ELM327.Simulator (
 , versionID
 ) where
 
+import Control.Concurrent (forkIO)
+import Control.Concurrent.STM (TMVar, atomically, newTMVarIO, takeTMVar, putTMVar)
+import Control.Concurrent.STM.TMChan (TMChan, newTMChanIO, closeTMChan, readTMChan, writeTMChan)
 import Control.Lens (Lens', lens, (^.), (^?), (.~), re)
-import Control.Monad.State (State, runState, get, put)
+import Control.Monad (void)
+import Control.Monad.State (StateT, runState, runStateT, get, put)
+import Control.Monad.IO.Class (liftIO)
+import Data.ByteString.Char8 (ByteString)
 import Data.Char (isHexDigit, toUpper)
 import Text.Printf (printf)
+import qualified Data.ByteString.Char8 as Char8
 
 import Numeric.Units.Dimensional.Prelude (ElectricPotential, volt, (*~), (/~))
+
+import System.IO.Streams (makeInputStream, makeOutputStream)
 
 import System.Hardware.ELM327.Commands (AT(..), Command(..), command,
                                         Protocol(..), protocol,
                                         obdMode, obdPID)
+import System.Hardware.ELM327.Connection (Con(..))
 import System.Hardware.ELM327.Simulator.OBDBus (OBDBus)
 import System.Hardware.ELM327.Utils.Hex (bytesToHex)
 import qualified System.Hardware.ELM327.Simulator.OBDBus as OBDBus
@@ -50,6 +61,54 @@ defaultSimulator b = Simulator { _obdBus = b
                                , _pin2Voltage = 12.3 *~ volt
                                , _versionID = "ELM327 v2.1" }
 
+-- | Private data declaration that represents a connection to the simulator.
+data SimCon bus = SimCon { _conInputBuffer :: TMChan ByteString
+                         , _conOutputBuffer :: TMChan ByteString
+                         , _unhandledInput :: TMVar ByteString }
+
+-- | Initialize a 'SimulatorCon'
+simCon :: IO (SimCon bus)
+simCon = do
+    ib <- newTMChanIO
+    ob <- newTMChanIO
+    ui <- newTMVarIO ""
+    return SimCon { _conInputBuffer = ib
+             , _conOutputBuffer = ob
+             , _unhandledInput = ui }
+
+-- | Connect to the simulator.
+--
+-- This function returns a connection and an 'IO' thunk that can close the connection.
+connect :: OBDBus bus => Simulator bus -> IO (Con, IO ())
+connect s = do
+    c <- simCon
+    is <- makeInputStream (produce c)
+    os <- makeOutputStream (consume c)
+    _ <- forkIO . void $ runStateT (runSimulator c) s
+    return (Con is os, atomically . closeTMChan $ _conInputBuffer c)
+  where
+    produce = atomically . readTMChan . _conOutputBuffer
+    consume _ Nothing = return ()
+    consume c (Just x) = atomically $ writeTMChan (_conInputBuffer c) x
+
+    runSimulator :: OBDBus bus => SimCon bus -> StateT (Simulator bus) IO ()
+    runSimulator c = do
+        next <- liftIO $ recv c
+        case next of
+            Nothing -> liftIO . atomically $ closeTMChan (_conOutputBuffer c)
+            Just cmd -> do response <- handle (Char8.unpack cmd)
+                           liftIO . atomically $ writeTMChan (_conOutputBuffer c) (Char8.pack response)
+                           runSimulator c
+
+    recv c = atomically $ recv' c =<< takeTMVar (_unhandledInput c)
+    recv' c bs = do
+        let (pref, suf) = Char8.break (== '\r') bs
+        if Char8.null suf then do next <- readTMChan (_conInputBuffer c)
+                                  case next of Nothing -> return Nothing
+                                               Just x -> recv' c (Char8.append bs x)
+                          else do putTMVar (_unhandledInput c) (Char8.tail suf)
+                                  return $ Just pref
+
 -- | Private data declaration that represents a parsed command (used in 'handle')
 data ParsedCommand = InvalidCommand
                    | KnownCommand Command
@@ -64,10 +123,10 @@ parsedCommand = parsedCommand' . map toUpper . filter (/= ' ')
                      | otherwise        = InvalidCommand
 
 -- | Make the simulator handle a command.
-handle :: OBDBus bus => String -> State (Simulator bus) String
+handle :: (Monad m, OBDBus bus) => String -> StateT (Simulator bus) m String
 handle cmd = handle' $ parsedCommand cmd
   where
-    handle' :: OBDBus bus => ParsedCommand -> State (Simulator bus) String
+    handle' :: (Monad m, OBDBus bus) => ParsedCommand -> StateT (Simulator bus) m String
     handle' InvalidCommand = return "?"
     handle' (UnknownOBD _) = reply . either id (++ "NO DATA") <$> connectToBus
     handle' (KnownCommand x) = handle'' x
@@ -125,14 +184,14 @@ versionID :: Lens' (Simulator bus) String
 versionID = lens _versionID $ \s x -> s { _versionID = x }
 
 -- | If the command is just a setting change, the ELM327 will reply with OK.
-replyOK :: State (Simulator bus) String
+replyOK :: Monad m => StateT (Simulator bus) m String
 replyOK = return "OK"
 
 -- | Connect to the underlying bus
 --
 -- If the connection fails, the result will be 'Left errorMessage', otherwise
 -- the result will be 'Right statusMessage'.
-connectToBus :: OBDBus bus => State (Simulator bus) (Either String String)
+connectToBus :: (Monad m, OBDBus bus) => StateT (Simulator bus) m (Either String String)
 connectToBus = do
     bus    <- OBDBus.protocol . (^. obdBus) <$> get
     chosen <- (^. chosenProtocol) <$> get
@@ -145,7 +204,7 @@ connectToBus = do
                         return $ Right ""
 
 -- | Describe the protocol number
-describeProtocolNumber :: State (Simulator bus) String
+describeProtocolNumber :: Monad m => StateT (Simulator bus) m String
 describeProtocolNumber = do
     cp <- (^. connectedProtocol) <$> get
     case cp of NotConnected -> return $ "A" ++ AutomaticProtocol ^. re protocol
@@ -153,17 +212,17 @@ describeProtocolNumber = do
                AutomaticallyChosen p -> return $ "A" ++ p ^. re protocol
 
 -- | Turn echo off
-echoOff :: State (Simulator bus) String
+echoOff :: Monad m => StateT (Simulator bus) m String
 echoOff = (echo .~ EchoOff) <$> get >>= put >> replyOK
 
 -- | Read the battery voltage
-readVoltage :: State (Simulator bus) String
+readVoltage :: Monad m => StateT (Simulator bus) m String
 readVoltage = printf "%.1f" . (/~ volt) . (^. pin2Voltage) <$> get
 
 -- | Fully reset the device
-resetAll :: OBDBus bus => State (Simulator bus) String
+resetAll :: (Monad m, OBDBus bus) => StateT (Simulator bus) m String
 resetAll = defaultSimulator . (^. obdBus) <$> get >>= put >> return ""
 
 -- | Select a protocol
-selectProtocol :: Protocol -> State (Simulator bus) String
+selectProtocol :: Monad m => Protocol -> StateT (Simulator bus) m String
 selectProtocol p = (chosenProtocol .~ p) <$> get >>= put >> replyOK
