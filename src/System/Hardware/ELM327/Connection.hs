@@ -46,6 +46,10 @@ sendBytes (Con _ os _) x = Streams.write (Just x) os
 sendString :: Con -> String -> IO ()
 sendString con = sendBytes con . Char8.pack
 
+-- | Receive available ELM327 caracters as a byte string
+recvRaw :: Con -> IO (Maybe ByteString)
+recvRaw (Con is _ _) = Streams.read is
+
 -- | Receive an ELM327 response as a byte string.
 recv :: Con -> IO (Maybe ByteString)
 recv (Con is _ _) = do
