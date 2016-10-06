@@ -191,15 +191,19 @@ replyOK = return "OK"
 -- the result will be 'Right statusMessage'.
 connectToBus :: (Monad m, OBDBus bus) => StateT (Simulator bus) m (Either String String)
 connectToBus = do
+    cp     <- (^. connectedProtocol) <$> get
     bus    <- OBDBus.protocol . (^. obdBus) <$> get
     chosen <- (^. chosenProtocol) <$> get
-    case chosen of
-        AutomaticProtocol -> do (connectedProtocol .~ AutomaticallyChosen bus) <$> get >>= put
-                                return $ Right "SEARCHING..."
-        _ -> if bus /= chosen
+    case (cp, chosen) of
+        (NotConnected, AutomaticProtocol) -> do
+            (connectedProtocol .~ AutomaticallyChosen bus) <$> get >>= put
+            return $ Right "SEARCHING..."
+        (NotConnected, _) ->
+            if bus /= chosen
                 then return $ Left "UNABLE TO CONNECT"
                 else do (connectedProtocol .~ ManuallyChosen bus) <$> get >>= put
                         return $ Right ""
+        (_, _) -> return $ Right ""
 
 -- | Describe the protocol number
 describeProtocolNumber :: Monad m => StateT (Simulator bus) m String
