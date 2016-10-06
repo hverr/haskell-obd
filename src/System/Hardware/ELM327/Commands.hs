@@ -3,7 +3,7 @@
 module System.Hardware.ELM327.Commands where
 
 import Control.Lens (Prism', prism', re, (^.), (^?))
-import Data.Bits (shiftR, (.&.))
+import Data.Bits (shiftR, (.&.), (.|.))
 import Data.Word (Word8, Word16)
 import Numeric (readHex)
 import Text.Printf (printf)
@@ -77,7 +77,7 @@ word16PID x = fromIntegral $ x .&. 0xFF
 obdWord16 :: Prism' Word16 OBD
 obdWord16 = prism' conv mConv
   where
-    conv (CurrentData x) = 0x0100 .&. fromIntegral (x ^. re currentData)
+    conv (CurrentData x) = 0x0100 .|. fromIntegral (x ^. re currentData)
 
     mConv x | word16Mode x == 0x01 = CurrentData <$> word16PID x ^? currentData
             | otherwise = Nothing
