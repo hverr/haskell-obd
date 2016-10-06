@@ -77,15 +77,13 @@ simCon = do
              , _unhandledInput = ui }
 
 -- | Connect to the simulator.
---
--- This function returns a connection and an 'IO' thunk that can close the connection.
-connect :: OBDBus bus => Simulator bus -> IO (Con, IO ())
+connect :: OBDBus bus => Simulator bus -> IO Con
 connect s = do
     c <- simCon
     is <- makeInputStream (produce c)
     os <- makeOutputStream (consume c)
     _ <- forkIO . void $ runStateT (runSimulator c) s
-    return (Con is os, atomically . closeTMChan $ _conInputBuffer c)
+    return $ Con is os  (atomically $ closeTMChan (_conInputBuffer c))
   where
     produce = atomically . readTMChan . _conOutputBuffer
     consume _ Nothing = return ()

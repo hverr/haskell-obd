@@ -24,8 +24,12 @@ import System.Hardware.ELM327.Errors (OBDError(..),
 import System.Hardware.ELM327.Utils.Hex (hexToBytes)
 import System.Hardware.ELM327.Utils.Monad (maybeToLeft, maybeToRight)
 
--- | A connection to an ELM327 device.
-data Con = Con (InputStream ByteString) (OutputStream ByteString)
+-- | A connection to an ELM327 device that can be closed.
+data Con = Con (InputStream ByteString) (OutputStream ByteString) (IO ())
+
+-- | Close the connection
+close :: Con -> IO ()
+close (Con _ _ c) = c
 
 -- | Send an ELM327 command.
 send :: Con -> Command -> IO ()
@@ -36,7 +40,7 @@ send con cmd = do
 
 -- | Send all bytes to the ELM327.
 sendBytes :: Con -> ByteString -> IO ()
-sendBytes (Con _ os) x = Streams.write (Just x) os
+sendBytes (Con _ os _) x = Streams.write (Just x) os
 
 -- | Send a string to the ELM327.
 sendString :: Con -> String -> IO ()
@@ -44,7 +48,7 @@ sendString con = sendBytes con . Char8.pack
 
 -- | Receive an ELM327 response as a byte string.
 recv :: Con -> IO (Maybe ByteString)
-recv (Con is _) = do
+recv (Con is _ _) = do
     s <- Char8.concat <$> recv' []
     if Char8.null s then return Nothing else return (Just s)
   where
@@ -61,7 +65,7 @@ recv (Con is _) = do
 
 -- | Flush the output stream of a connection.
 flushOutputStream :: Con -> IO ()
-flushOutputStream (Con _ os) = Streams.write (Just "") os
+flushOutputStream (Con _ os _) = Streams.write (Just "") os
 
 -- | Send an 'AT' command and expect a response.
 at :: Con -> AT -> IO (Maybe ByteString)

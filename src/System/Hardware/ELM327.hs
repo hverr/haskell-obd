@@ -17,7 +17,7 @@ import qualified System.Hardware.Serialport as Port
 import System.Hardware.ELM327.Connection (Con(..))
 
 -- | Connect to an ELM327 device.
-connect :: FilePath -> IO (Con, IO ())
+connect :: FilePath -> IO Con
 connect fp = do
     let s = SerialPortSettings { commSpeed = CS38400
                                , bitsPerWord = 8
@@ -28,7 +28,7 @@ connect fp = do
     port <- openSerial fp s
     is <- makeInputStream (produce port)
     os <- makeOutputStream (consume port)
-    return (Con is os, closeSerial port)
+    return $ Con is os (closeSerial port)
   where
     produce port = Just <$> Port.recv port 8
     consume _    Nothing = undefined
