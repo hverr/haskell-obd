@@ -1,4 +1,3 @@
-{-# LANGUAGE GADTs #-}
 -- | A list of supported ELM327 commands (incomplete).
 module System.Hardware.ELM327.Commands where
 
