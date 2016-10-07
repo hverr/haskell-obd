@@ -45,6 +45,12 @@ intakeAirTemperature = iso conv mConv
   where conv = (^. doubleOneByte) . (P.+ 40) . (/~ degreeCelsius)
         mConv = (*~ degreeCelsius) . (P.- 40) . (^. re doubleOneByte)
 
+-- | Convert intake manifold absolute pressure.
+intakeManifoldAbsolutePressure :: Iso' (Pressure Double) OneByte
+intakeManifoldAbsolutePressure = iso conv mConv
+  where conv = (^. doubleOneByte) . (/~ kilo pascal)
+        mConv = (*~ kilo pascal) . (^. re doubleOneByte)
+
 -- | Convert mass air flow rate.
 massAirFlowRate :: Iso' (MassFlow Double) TwoBytes
 massAirFlowRate = iso conv mConv

@@ -93,6 +93,7 @@ obd = prism' conv mConv
 data CurrentData = OBDEngineCoolantTemperature
                  | OBDEngineRPM
                  | OBDIntakeAirTemperature
+                 | OBDIntakeManifoldAbsolutePressure
                  | OBDMassAirFlowRate
                  | OBDSupported01PIDs
                  | OBDThrottlePosition
@@ -106,6 +107,7 @@ currentData = prism' conv mConv
     conv OBDEngineCoolantTemperature = 0x05
     conv OBDEngineRPM = 0x0C
     conv OBDIntakeAirTemperature = 0x0F
+    conv OBDIntakeManifoldAbsolutePressure = 0x0B
     conv OBDMassAirFlowRate = 0x10
     conv OBDSupported01PIDs = 0x00
     conv OBDThrottlePosition = 0x11
@@ -114,6 +116,7 @@ currentData = prism' conv mConv
     mConv 0x05 = Just OBDEngineCoolantTemperature
     mConv 0x0C = Just OBDEngineRPM
     mConv 0x0F = Just OBDIntakeAirTemperature
+    mConv 0x0B = Just OBDIntakeManifoldAbsolutePressure
     mConv 0x10 = Just OBDMassAirFlowRate
     mConv 0x00 = Just OBDSupported01PIDs
     mConv 0x11 = Just OBDThrottlePosition

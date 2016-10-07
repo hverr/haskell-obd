@@ -18,6 +18,7 @@ import qualified System.Hardware.ELM327.OBD.Conversion as C
 data VWPolo2007Bus = Bus { _engineCoolantTemperature :: CelsiusTemperature Double
                          , _engineRPM :: Frequency Double
                          , _intakeAirTemperature :: CelsiusTemperature Double
+                         , _intakeManifoldAbsolutePressure :: Pressure Double
                          , _massAirFlowRate :: MassFlow Double
                          , _throttlePosition :: Double
                          , _vehicleSpeed :: Velocity Double }
@@ -35,6 +36,7 @@ instance OBDBus VWPolo2007Bus where
         reqCD OBDEngineCoolantTemperature = oneByte engineCoolantTemperature C.engineCoolantTemperature <$> get
         reqCD OBDEngineRPM = twoBytes engineRPM C.engineRPM <$> get
         reqCD OBDIntakeAirTemperature = oneByte intakeAirTemperature C.intakeAirTemperature <$> get
+        reqCD OBDIntakeManifoldAbsolutePressure = oneByte intakeManifoldAbsolutePressure C.intakeManifoldAbsolutePressure <$> get
         reqCD OBDMassAirFlowRate = twoBytes massAirFlowRate C.massAirFlowRate <$> get
         reqCD OBDSupported01PIDs = return $ Just supported01PIDs
         reqCD OBDThrottlePosition = oneByte throttlePosition C.throttlePosition <$> get
@@ -48,6 +50,7 @@ stoppedCarBus :: VWPolo2007Bus
 stoppedCarBus = Bus { _engineCoolantTemperature = 20 *~ degreeCelsius
                     , _engineRPM = _0
                     , _intakeAirTemperature = 20 *~ degreeCelsius
+                    , _intakeManifoldAbsolutePressure = _0
                     , _massAirFlowRate = _0
                     , _throttlePosition = 0
                     , _vehicleSpeed = _0 }
@@ -63,6 +66,10 @@ engineRPM = lens _engineRPM $ \b x -> b { _engineRPM = x }
 -- | The intake air temperature.
 intakeAirTemperature :: Lens' VWPolo2007Bus (CelsiusTemperature Double)
 intakeAirTemperature = lens _intakeAirTemperature $ \b x -> b { _intakeAirTemperature = x }
+
+-- | The intake manifold absolute pressure.
+intakeManifoldAbsolutePressure :: Lens' VWPolo2007Bus (Pressure Double)
+intakeManifoldAbsolutePressure = lens _intakeManifoldAbsolutePressure $ \b x -> b { _intakeManifoldAbsolutePressure = x }
 
 -- | The mass air flow rate.
 massAirFlowRate :: Lens' VWPolo2007Bus (MassFlow Double)
