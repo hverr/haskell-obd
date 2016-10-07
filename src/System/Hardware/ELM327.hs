@@ -31,7 +31,7 @@ connect fp = do
     return $ Con is os (closeSerial port)
   where
     produce port = Just <$> Port.recv port 8
-    consume _    Nothing = undefined
+    consume _    Nothing = return ()
     consume port (Just x) = sendAll port x
 
     sendAll port bs
