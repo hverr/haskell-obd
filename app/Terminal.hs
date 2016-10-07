@@ -72,9 +72,6 @@ readEvalPrint = runInputT defaultSettings loop
                           Just ":exit" -> return ()
                           Just x -> handleLine x >> loop
 
-exitConnection :: InputT Term ()
-exitConnection = undefined
-
 handleLine :: String -> InputT Term ()
 handleLine cmd = do
     con <- lift ask
