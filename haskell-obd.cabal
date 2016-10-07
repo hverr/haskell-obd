@@ -15,6 +15,7 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     System.Hardware.ELM327
+                     , System.Hardware.ELM327.Car
                      , System.Hardware.ELM327.Commands
                      , System.Hardware.ELM327.Connection
                      , System.Hardware.ELM327.Errors
