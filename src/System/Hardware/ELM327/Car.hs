@@ -14,6 +14,7 @@ import qualified System.Hardware.ELM327.Connection.OBD as OBD
 type I m a = m (Either OBDError a)
 
 data Car m = Car { engineCoolantTemperature :: I m (CelsiusTemperature Double)
+                 , engineFuelRate :: I m (VolumeFlow Double)
                  , engineRPM :: I m (Frequency Double)
                  , intakeAirTemperature :: I m (CelsiusTemperature Double)
                  , intakeManifoldAbsolutePressure :: I m (Pressure Double)
@@ -25,6 +26,7 @@ data Car m = Car { engineCoolantTemperature :: I m (CelsiusTemperature Double)
 -- most of the data.
 defaultCar :: MonadIO m => Con -> Car m
 defaultCar c = Car { engineCoolantTemperature = liftIO $ OBD.engineCoolantTemperature c
+                   , engineFuelRate = liftIO $ OBD.engineFuelRate c
                    , engineRPM = liftIO $ OBD.engineRPM c
                    , intakeAirTemperature = liftIO $ OBD.intakeAirTemperature c
                    , intakeManifoldAbsolutePressure = liftIO $ OBD.intakeManifoldAbsolutePressure c

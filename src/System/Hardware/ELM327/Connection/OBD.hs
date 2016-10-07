@@ -22,6 +22,10 @@ type Request a = Con -> IO (Either OBDError a)
 engineCoolantTemperature :: Request (CelsiusTemperature Double)
 engineCoolantTemperature = getOneByte OBDEngineCoolantTemperature C.engineCoolantTemperature
 
+-- | Get the engine fuel rate.
+engineFuelRate :: Request (VolumeFlow Double)
+engineFuelRate = getTwoBytes OBDEngineFuelRate C.engineFuelRate
+
 -- | Get the engine RPM.
 engineRPM :: Request (Frequency Double)
 engineRPM = getTwoBytes OBDEngineRPM C.engineRPM

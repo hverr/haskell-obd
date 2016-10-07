@@ -33,6 +33,12 @@ engineCoolantTemperature = iso conv mConv
   where conv = (^. doubleOneByte) . (P.+ 40) . (/~ degreeCelsius)
         mConv = (*~ degreeCelsius) . (P.- 40) . (^. re doubleOneByte)
 
+-- | Convert engine fuel rate.
+engineFuelRate :: Iso' (VolumeFlow Double) TwoBytes
+engineFuelRate = iso conv mConv
+  where conv = (^. doubleTwoBytes) . (P.* 20) . (/~ (liter / hour))
+        mConv = (*~ (liter / hour)) . (P./ 20) . (^. re doubleTwoBytes)
+
 -- | Convert engine RPM.
 engineRPM :: Iso' (Frequency Double) TwoBytes
 engineRPM = iso conv mConv

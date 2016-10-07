@@ -91,6 +91,7 @@ obd = prism' conv mConv
 
 -- | An OBD command requesting current vehicle data (mode 0x01).
 data CurrentData = OBDEngineCoolantTemperature
+                 | OBDEngineFuelRate
                  | OBDEngineRPM
                  | OBDIntakeAirTemperature
                  | OBDIntakeManifoldAbsolutePressure
@@ -105,6 +106,7 @@ currentData :: Prism' Word8 CurrentData
 currentData = prism' conv mConv
   where
     conv OBDEngineCoolantTemperature = 0x05
+    conv OBDEngineFuelRate = 0x5E
     conv OBDEngineRPM = 0x0C
     conv OBDIntakeAirTemperature = 0x0F
     conv OBDIntakeManifoldAbsolutePressure = 0x0B
@@ -114,6 +116,7 @@ currentData = prism' conv mConv
     conv OBDVehicleSpeed = 0x0D
 
     mConv 0x05 = Just OBDEngineCoolantTemperature
+    mConv 0x5E = Just OBDEngineFuelRate
     mConv 0x0C = Just OBDEngineRPM
     mConv 0x0F = Just OBDIntakeAirTemperature
     mConv 0x0B = Just OBDIntakeManifoldAbsolutePressure

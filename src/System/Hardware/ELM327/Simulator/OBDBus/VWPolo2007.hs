@@ -34,6 +34,7 @@ instance OBDBus VWPolo2007Bus where
     request (CurrentData x) = reqCD x
       where
         reqCD OBDEngineCoolantTemperature = oneByte engineCoolantTemperature C.engineCoolantTemperature <$> get
+        reqCD OBDEngineFuelRate = return Nothing
         reqCD OBDEngineRPM = twoBytes engineRPM C.engineRPM <$> get
         reqCD OBDIntakeAirTemperature = oneByte intakeAirTemperature C.intakeAirTemperature <$> get
         reqCD OBDIntakeManifoldAbsolutePressure = oneByte intakeManifoldAbsolutePressure C.intakeManifoldAbsolutePressure <$> get
