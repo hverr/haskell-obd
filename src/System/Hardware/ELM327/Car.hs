@@ -2,12 +2,32 @@
 -- | A generic car data type
 module System.Hardware.ELM327.Car where
 
+import Control.Monad.IO.Class (MonadIO, liftIO)
+
 import Numeric.Units.Dimensional.Prelude
 
-data Car m = Car { engineCoolantTemperature :: m (CelsiusTemperature Double)
-                 , engineRPM :: m (Frequency Double)
-                 , intakeAirTemperature :: m (CelsiusTemperature Double)
-                 , intakeManifoldAbsolutePressure :: m (Pressure Double)
-                 , massAirFlowRate :: m (MassFlow Double)
-                 , throttlePosition :: m Double
-                 , vehicleSpeed :: m (Velocity Double) }
+import System.Hardware.ELM327.Connection (Con)
+import System.Hardware.ELM327.Errors (OBDError)
+import qualified System.Hardware.ELM327.Connection.OBD as OBD
+
+-- | Some info about the car/
+type I m a = m (Either OBDError a)
+
+data Car m = Car { engineCoolantTemperature :: I m (CelsiusTemperature Double)
+                 , engineRPM :: I m (Frequency Double)
+                 , intakeAirTemperature :: I m (CelsiusTemperature Double)
+                 , intakeManifoldAbsolutePressure :: I m (Pressure Double)
+                 , massAirFlowRate :: I m (MassFlow Double)
+                 , throttlePosition :: I m Double
+                 , vehicleSpeed :: I m (Velocity Double) }
+
+-- | The default car, that uses straight forward OBD commands to get
+-- most of the data.
+defaultCar :: MonadIO m => Con -> Car m
+defaultCar c = Car { engineCoolantTemperature = liftIO $ OBD.engineCoolantTemperature c
+                   , engineRPM = liftIO $ OBD.engineRPM c
+                   , intakeAirTemperature = liftIO $ OBD.intakeAirTemperature c
+                   , intakeManifoldAbsolutePressure = liftIO $ OBD.intakeManifoldAbsolutePressure c
+                   , massAirFlowRate = liftIO $ OBD.massAirFlowRate c
+                   , throttlePosition = liftIO $ OBD.throttlePosition c
+                   , vehicleSpeed = liftIO $ OBD.vehicleSpeed c }
