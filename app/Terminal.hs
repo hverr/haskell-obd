@@ -82,11 +82,8 @@ printAll :: InputT Term ()
 printAll = do
     maybeBS <- lift ask >>= liftIO . recv
     case maybeBS of Nothing -> return ()
-                    Just b -> liftIO . putStr $ convertResponse b
+                    Just b -> liftIO . putStrLn $ convertResponse b
   where
-    convertResponse = stripPrompt . map convCR . filter (/= '\0') . Char8.unpack
-    convCR '\r' = '\n'
-    convCR x = x
-
+    convertResponse = stripPrompt . filter (/= '\0') . Char8.unpack
     stripPrompt :: String -> String
     stripPrompt x = if "\n>" `isSuffixOf` x then take (length x - 1) x else x
