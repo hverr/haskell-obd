@@ -20,7 +20,7 @@ import System.Console.Haskeline (InputT, MonadException, RunIO(..),
                                  controlIO, runInputT,
                                  defaultSettings, getInputLine)
 
-import System.Hardware.ELM327.Connection (Con, recvRaw, sendString)
+import System.Hardware.ELM327.Connection (Con, recv, sendString)
 import System.Hardware.ELM327.Simulator (defaultSimulator)
 import System.Hardware.ELM327.Simulator.OBDBus.VWPolo2007 (stoppedCarBus)
 import qualified System.Hardware.ELM327.Connection as Connection
@@ -80,7 +80,7 @@ handleLine cmd = do
 
 printAll :: InputT Term ()
 printAll = do
-    maybeBS <- lift ask >>= liftIO . recvRaw
+    maybeBS <- lift ask >>= liftIO . recv
     case maybeBS of Nothing -> return ()
                     Just b -> liftIO . putStr $ convertResponse b
   where
