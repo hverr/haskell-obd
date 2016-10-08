@@ -3,6 +3,7 @@
 module System.Hardware.ELM327.Car where
 
 import Control.Monad.IO.Class (MonadIO, liftIO)
+import Control.Monad.Trans.Either (EitherT(..), runEitherT)
 
 import Numeric.Units.Dimensional.Prelude
 
@@ -10,9 +11,18 @@ import System.Hardware.ELM327.Connection (Con)
 import System.Hardware.ELM327.Errors (OBDError)
 import qualified System.Hardware.ELM327.Connection.OBD as OBD
 
--- | Some info about the car/
+-- | Some info about the car.
 type I m a = m (Either OBDError a)
 
+-- | A monad transform for information about the car.
+infoT :: I m a -> EitherT OBDError m a
+infoT = EitherT
+
+-- | Run the monad transform for inforamtion about the ar.
+runInfoT :: EitherT OBDError m a -> I m a
+runInfoT = runEitherT
+
+-- | A car that has some properties.
 data Car m = Car { engineCoolantTemperature :: I m (ThermodynamicTemperature Double)
                  , engineFuelRate :: I m (VolumeFlow Double)
                  , engineRPM :: I m (Frequency Double)
