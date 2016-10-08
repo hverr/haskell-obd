@@ -14,7 +14,8 @@ import System.Hardware.Serialport (CommSpeed(..),
                                    openSerial)
 import qualified System.Hardware.Serialport as Port
 
-import System.Hardware.ELM327.Connection (Con(..))
+import System.Hardware.ELM327.Commands (AT(..))
+import System.Hardware.ELM327.Connection (Con(..), at)
 
 -- | Connect to an ELM327 device.
 connect :: FilePath -> IO Con
@@ -28,7 +29,7 @@ connect fp = do
     port <- openSerial fp s
     is <- makeInputStream (produce port)
     os <- makeOutputStream (consume port)
-    return $ Con is os (closeSerial port)
+    initialize $ Con is os (closeSerial port)
   where
     produce port = Just <$> Port.recv port 8
     consume _    Nothing = return ()
@@ -38,3 +39,8 @@ connect fp = do
         | Char8.null bs = return ()
         | otherwise = do sent <- Port.send port bs
                          sendAll port $ Char8.drop sent bs
+
+    initialize con = do
+        _ <- at con ATResetAll
+        _ <- at con ATEchoOff
+        return con
