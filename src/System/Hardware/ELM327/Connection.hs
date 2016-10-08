@@ -53,7 +53,7 @@ recvRaw (Con is _ _) = Streams.read is
 -- | Receive an ELM327 response as a byte string.
 recv :: Con -> IO (Maybe ByteString)
 recv (Con is _ _) = do
-    s <- Char8.concat <$> recv' []
+    s <- Char8.concat . reverse <$> recv' []
     if Char8.null s then return Nothing else return (Just s)
   where
     recv' xs = do
