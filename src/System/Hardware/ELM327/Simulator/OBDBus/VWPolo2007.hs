@@ -15,9 +15,9 @@ import System.Hardware.ELM327.Simulator.OBDBus (OBDBus, protocol, request)
 import qualified System.Hardware.ELM327.OBD.Conversion as C
 
 -- | State of the simulated bus.
-data VWPolo2007Bus = Bus { _engineCoolantTemperature :: CelsiusTemperature Double
+data VWPolo2007Bus = Bus { _engineCoolantTemperature :: ThermodynamicTemperature Double
                          , _engineRPM :: Frequency Double
-                         , _intakeAirTemperature :: CelsiusTemperature Double
+                         , _intakeAirTemperature :: ThermodynamicTemperature Double
                          , _intakeManifoldAbsolutePressure :: Pressure Double
                          , _massAirFlowRate :: MassFlow Double
                          , _throttlePosition :: Double
@@ -48,16 +48,16 @@ instance OBDBus VWPolo2007Bus where
 
 -- | The bus of a stopped car
 stoppedCarBus :: VWPolo2007Bus
-stoppedCarBus = Bus { _engineCoolantTemperature = 20 *~ degreeCelsius
+stoppedCarBus = Bus { _engineCoolantTemperature = fromDegreeCelsiusAbsolute 20
                     , _engineRPM = _0
-                    , _intakeAirTemperature = 20 *~ degreeCelsius
+                    , _intakeAirTemperature = fromDegreeCelsiusAbsolute 20
                     , _intakeManifoldAbsolutePressure = _0
                     , _massAirFlowRate = _0
                     , _throttlePosition = 0
                     , _vehicleSpeed = _0 }
 
 -- | The engine coolant temperature.
-engineCoolantTemperature :: Lens' VWPolo2007Bus (CelsiusTemperature Double)
+engineCoolantTemperature :: Lens' VWPolo2007Bus (ThermodynamicTemperature Double)
 engineCoolantTemperature = lens _engineCoolantTemperature $ \b x -> b { _engineCoolantTemperature = x }
 
 -- | The engine RPM.
@@ -65,7 +65,7 @@ engineRPM :: Lens' VWPolo2007Bus (Frequency Double)
 engineRPM = lens _engineRPM $ \b x -> b { _engineRPM = x }
 
 -- | The intake air temperature.
-intakeAirTemperature :: Lens' VWPolo2007Bus (CelsiusTemperature Double)
+intakeAirTemperature :: Lens' VWPolo2007Bus (ThermodynamicTemperature Double)
 intakeAirTemperature = lens _intakeAirTemperature $ \b x -> b { _intakeAirTemperature = x }
 
 -- | The intake manifold absolute pressure.

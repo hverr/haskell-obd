@@ -13,10 +13,10 @@ import qualified System.Hardware.ELM327.Connection.OBD as OBD
 -- | Some info about the car/
 type I m a = m (Either OBDError a)
 
-data Car m = Car { engineCoolantTemperature :: I m (CelsiusTemperature Double)
+data Car m = Car { engineCoolantTemperature :: I m (ThermodynamicTemperature Double)
                  , engineFuelRate :: I m (VolumeFlow Double)
                  , engineRPM :: I m (Frequency Double)
-                 , intakeAirTemperature :: I m (CelsiusTemperature Double)
+                 , intakeAirTemperature :: I m (ThermodynamicTemperature Double)
                  , intakeManifoldAbsolutePressure :: I m (Pressure Double)
                  , massAirFlowRate :: I m (MassFlow Double)
                  , throttlePosition :: I m Double

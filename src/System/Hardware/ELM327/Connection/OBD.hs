@@ -19,7 +19,7 @@ import qualified System.Hardware.ELM327.OBD.Conversion as C
 type Request a = Con -> IO (Either OBDError a)
 
 -- | Get the engine coolant temperature.
-engineCoolantTemperature :: Request (CelsiusTemperature Double)
+engineCoolantTemperature :: Request (ThermodynamicTemperature Double)
 engineCoolantTemperature = getOneByte OBDEngineCoolantTemperature C.engineCoolantTemperature
 
 -- | Get the engine fuel rate.
@@ -31,7 +31,7 @@ engineRPM :: Request (Frequency Double)
 engineRPM = getTwoBytes OBDEngineRPM C.engineRPM
 
 -- | Get the intake air temperature.
-intakeAirTemperature :: Request (CelsiusTemperature Double)
+intakeAirTemperature :: Request (ThermodynamicTemperature Double)
 intakeAirTemperature = getOneByte OBDIntakeAirTemperature C.intakeAirTemperature
 
 -- | Get the intake manifold absolute pressure

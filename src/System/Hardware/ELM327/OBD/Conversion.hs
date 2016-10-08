@@ -28,10 +28,10 @@ oneByte :: OneByte -> [Word8]
 oneByte x = [x]
 
 -- | Convert engine coolant temperature.
-engineCoolantTemperature :: Iso' (CelsiusTemperature Double) OneByte
+engineCoolantTemperature :: Iso' (ThermodynamicTemperature Double) OneByte
 engineCoolantTemperature = iso conv mConv
-  where conv = (^. doubleOneByte) . (P.+ 40) . (/~ degreeCelsius)
-        mConv = (*~ degreeCelsius) . (P.- 40) . (^. re doubleOneByte)
+  where conv = (^. doubleOneByte) . (P.+ 40) . toDegreeCelsiusAbsolute
+        mConv = fromDegreeCelsiusAbsolute . (P.- 40) . (^. re doubleOneByte)
 
 -- | Convert engine fuel rate.
 engineFuelRate :: Iso' (VolumeFlow Double) TwoBytes
@@ -46,10 +46,10 @@ engineRPM = iso conv mConv
         mConv = (*~ rpm) . (P./ 4) . (^. re doubleTwoBytes)
 
 -- | Convert intake air temperature.
-intakeAirTemperature :: Iso' (CelsiusTemperature Double) OneByte
+intakeAirTemperature :: Iso' (ThermodynamicTemperature Double) OneByte
 intakeAirTemperature = iso conv mConv
-  where conv = (^. doubleOneByte) . (P.+ 40) . (/~ degreeCelsius)
-        mConv = (*~ degreeCelsius) . (P.- 40) . (^. re doubleOneByte)
+  where conv = (^. doubleOneByte) . (P.+ 40) . toDegreeCelsiusAbsolute
+        mConv = fromDegreeCelsiusAbsolute . (P.- 40) . (^. re doubleOneByte)
 
 -- | Convert intake manifold absolute pressure.
 intakeManifoldAbsolutePressure :: Iso' (Pressure Double) OneByte
