@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            Communicate to OBD interfaces over ELM327
 description:         Please see README.md
 homepage:            https://github.com/hverr/haskell-obd#readme
-license:             BSD3
+license:             GPLv3
 license-file:        LICENSE
 author:              Henri Verroken
 maintainer:          henriverroken@gmail.com
