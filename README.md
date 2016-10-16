@@ -23,12 +23,14 @@ The interface to the engine is shown below.
 module Main where
 
 import System.Hardware.ELM327 (connect)
-import System.Hardware.ELM327.Connection (Con, close)
+import System.Hardware.ELM327.Commands (AT(..), Protocol(..))
+import System.Hardware.ELM327.Connection (Con, close, at)
 import System.Hardware.ELM327.Car (Car(..), defaultCar infoT)
 
 main :: IO ()
 main = do
     con <- connect "/dev/ttyUSB0"
+    _ <- at con (ATSelectProtocol AutomaticProtocol)
     let car = defaultCar con
 
     printI "ECT"       $ engineCoolantTemperature       car
