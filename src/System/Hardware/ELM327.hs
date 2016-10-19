@@ -15,10 +15,10 @@ import System.Hardware.Serialport (CommSpeed(..),
 import qualified System.Hardware.Serialport as Port
 
 import System.Hardware.ELM327.Commands (AT(..))
-import System.Hardware.ELM327.Connection (Con(..), at)
+import System.Hardware.ELM327.Connection (Con(..), ConError, withCon, at)
 
 -- | Connect to an ELM327 device.
-connect :: FilePath -> IO Con
+connect :: FilePath -> IO (Either ConError Con)
 connect fp = do
     let s = SerialPortSettings { commSpeed = CS38400
                                , bitsPerWord = 8
@@ -41,6 +41,8 @@ connect fp = do
                          sendAll port $ Char8.drop sent bs
 
     initialize con = do
-        _ <- at con ATResetAll
-        _ <- at con ATEchoOff
-        return con
+        v <- withCon con $ do
+            _ <- at ATResetAll
+            _ <- at ATEchoOff
+            return ()
+        return (v >> return con)
