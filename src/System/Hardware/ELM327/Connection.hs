@@ -83,7 +83,7 @@ recv = do
   where
     recv' xs = do
         bs <- ask >>= liftIO . Streams.read . conInput
-        case bs of Nothing -> recv' xs
+        case bs of Nothing -> throwError ConTimeoutError
                    Just bs' -> handle' xs bs'
     handle' xs bs =
         let (pref, suf) = Char8.break (== '>') . Char8.filter (not . ignored) $ bs in

@@ -25,13 +25,16 @@ connect fp = do
                                , stopb = One
                                , parity = NoParity
                                , flowControl = NoFlowControl
-                               , timeout = 2 }
+                               , timeout = 5 {- 500ms -} }
     port <- openSerial fp s
     is <- makeInputStream (produce port)
     os <- makeOutputStream (consume port)
     initialize $ Con is os (closeSerial port)
   where
-    produce port = Just <$> Port.recv port 8
+    produce port = do
+        b <- Port.recv port 8
+        if Char8.null b then return Nothing
+                        else return $ Just b
     consume _    Nothing = return ()
     consume port (Just x) = sendAll port x
 
