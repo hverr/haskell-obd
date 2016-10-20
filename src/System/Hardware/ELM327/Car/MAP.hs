@@ -34,8 +34,8 @@ defaultProperties = MAPProperties { volumetricEfficiency = 0.75 *~ one          
 -- | Create a car that uses the intake manifold absolute pressure (MAP)
 -- to calculate fuel consumption.
 mapCar :: MonadIO m => MAPProperties -> Car (ConT m)
-mapCar p = (\c -> (Car.massAirFlowRate .~ massAirFlowRate' p c) c) .
-           (\c -> (Car.engineFuelRate  .~ engineFuelRate'  p c) c) $
+mapCar p = (\c -> (Car.engineFuelRate  .~ engineFuelRate'  p c) c) .
+           (\c -> (Car.massAirFlowRate .~ massAirFlowRate' p c) c) $
            defaultCar
 
 -- | Calculate MAF from RPM, MAP and IAT
