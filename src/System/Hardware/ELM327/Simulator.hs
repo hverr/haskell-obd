@@ -83,10 +83,10 @@ connect s = do
     is <- makeInputStream (produce c)
     os <- makeOutputStream (consume c)
     _ <- forkIO . void $ runStateT (runSimulator c) s
-    return $ Con is os  (atomically $ closeTMChan (_conInputBuffer c))
+    return $ Con is os
   where
     produce = atomically . readTMChan . _conOutputBuffer
-    consume _ Nothing = return ()
+    consume c Nothing = atomically $ closeTMChan (_conInputBuffer c)
     consume c (Just x) = atomically $ writeTMChan (_conInputBuffer c) x
 
     runSimulator :: OBDBus bus => SimCon bus -> StateT (Simulator bus) IO ()

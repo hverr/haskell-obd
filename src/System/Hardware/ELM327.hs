@@ -29,13 +29,13 @@ connect fp = do
     port <- openSerial fp s
     is <- makeInputStream (produce port)
     os <- makeOutputStream (consume port)
-    initialize $ Con is os (closeSerial port)
+    initialize $ Con is os
   where
     produce port = do
         b <- Port.recv port 8
         if Char8.null b then return Nothing
                         else return $ Just b
-    consume _    Nothing = return ()
+    consume port Nothing = closeSerial port
     consume port (Just x) = sendAll port x
 
     sendAll port bs

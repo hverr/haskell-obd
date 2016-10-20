@@ -32,8 +32,7 @@ import System.Hardware.ELM327.Utils.Monad (maybeToExcept, orThrow)
 
 -- | A connection to an ELM327 device that can be closed.
 data Con = Con { conInput :: InputStream ByteString
-               , conOutput :: OutputStream ByteString
-               , conClose :: IO () }
+               , conOutput :: OutputStream ByteString }
 
 -- | Monad transformer for connection operations.
 newtype ConT m a = ConT { runConT :: ReaderT Con (ExceptT ConError m) a }
@@ -50,11 +49,11 @@ data ConError = ConOBDError OBDError
 
 -- | Close the connection
 close :: MonadIO m => ConT m ()
-close = ask >>= liftIO . conClose
+close = ask >>= close'
 
 -- | Close the connection
 close' :: MonadIO m => Con -> m ()
-close' =  liftIO . conClose
+close' =  liftIO . Streams.write Nothing . conOutput
 
 -- | Send an ELM327 command.
 send :: MonadIO m => Command -> ConT m ()
