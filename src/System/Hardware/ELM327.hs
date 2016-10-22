@@ -25,7 +25,7 @@ connect fp = do
                                , stopb = One
                                , parity = NoParity
                                , flowControl = NoFlowControl
-                               , timeout = 5 {- 500ms -} }
+                               , timeout = 50 {- 5000ms -} }
     port <- openSerial fp s
     is <- makeInputStream (produce port)
     os <- makeOutputStream (consume port)
