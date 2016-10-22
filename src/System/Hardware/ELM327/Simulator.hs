@@ -83,7 +83,7 @@ connect s = do
     is <- makeInputStream (produce c)
     os <- makeOutputStream (consume c)
     _ <- forkIO . void $ runStateT (runSimulator c) s
-    return $ Con is os
+    return $ Con is os (const $ return ())
   where
     produce = atomically . readTMChan . _conOutputBuffer
     consume c Nothing = atomically $ closeTMChan (_conInputBuffer c)

@@ -29,7 +29,7 @@ connect fp = do
     port <- openSerial fp s
     is <- makeInputStream (produce port)
     os <- makeOutputStream (consume port)
-    initialize $ Con is os
+    initialize $ Con is os (const $ return ())
   where
     produce port = do
         b <- Port.recv port 8
