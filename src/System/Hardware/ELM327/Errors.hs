@@ -10,6 +10,7 @@ data OBDError = OBDErrorMessage OBDErrorMessage
 
 -- | Error messages sent by the ELM327 when issuing OBD commands
 data OBDErrorMessage = UnableToConnect
+                     | BusInitError
                      | NoData
                      deriving (Eq, Show)
 
@@ -18,9 +19,11 @@ obdErrorMessage :: Prism' String OBDErrorMessage
 obdErrorMessage = prism' conv mConv
   where
     conv UnableToConnect = "UNABLE TO CONNECT"
+    conv BusInitError = "BUS INIT: ... ERROR"
     conv NoData = "NO DATA"
 
     mConv "UNABLE TO CONNECT" = Just UnableToConnect
+    mConv "BUS INIT: ... ERROR" = Just BusInitError
     mConv "NO DATA" = Just NoData
     mConv _ = Nothing
 

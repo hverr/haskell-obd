@@ -147,7 +147,7 @@ obd cmd = do
                 >>= (`orThrow` ConOBDError (OBDDecodeError NotEnoughBytesError)) . hexToBytes
                 >>= (`orThrow` ConOBDError (OBDDecodeError NoResponseHeaderError)) . stripHeader
 
-    statusPrefixes = ["SEARCHING..."]
+    statusPrefixes = ["BUS INIT: OK", "SEARCHING..."]
     removeStatusPrefixes x = foldl stripPrefix' x statusPrefixes
     stripPrefix' x pref = fromMaybe x (stripPrefix pref x)
     stripHeader = stripPrefix [0x40 + obdMode cmd, obdPID cmd]
